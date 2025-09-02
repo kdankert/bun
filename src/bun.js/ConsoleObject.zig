@@ -1083,6 +1083,7 @@ pub const Formatter = struct {
         Symbol,
 
         CustomFormattedObject,
+        ExplicitObject,
 
         GlobalObject,
         Private,
@@ -1146,6 +1147,7 @@ pub const Formatter = struct {
                 BigInt: void,
                 Symbol: void,
                 CustomFormattedObject: CustomFormattedObject,
+                ExplicitObject: void,
                 GlobalObject: void,
                 Private: void,
                 Promise: void,
@@ -1389,6 +1391,8 @@ pub const Formatter = struct {
                     .CustomGetterSetter => .CustomGetterSetter,
 
                     .JSAsJSONType => .toJSON,
+
+                    .Generator, .AsyncGenerator => .ExplicitObject,
 
                     else => .JSON,
                 },
@@ -2255,6 +2259,13 @@ pub const Formatter = struct {
                 } else {
                     try this.format(try ConsoleObject.Formatter.Tag.get(result, this.globalThis), Writer, writer_, result, this.globalThis, enable_ansi_colors);
                 }
+            },
+            .ExplicitObject => {
+                const display_name = @tagName(jsType);
+                this.addForNewLine("Object [] {}".len + display_name.len);
+                writer.print(comptime Output.prettyFmt("Object <r><cyan>[{s}]<r> {{}}", enable_ansi_colors), .{
+                    display_name,
+                });
             },
             .Symbol => {
                 const description = value.getDescription(this.globalThis);
